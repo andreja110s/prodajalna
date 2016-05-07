@@ -202,6 +202,7 @@ streznik.post('/prijava', function(zahteva, odgovor) {
   form.parse(zahteva, function (napaka1, polja, datoteke) {
     var napaka2 = false;
     var uspesnost=1;
+    var obvestilo="";
     try {
       var stmt = pb.prepare("\
         INSERT INTO Customer \
@@ -213,25 +214,32 @@ streznik.post('/prijava', function(zahteva, odgovor) {
       stmt.run(polja.FirstName, polja.LastName, polja.Company, polja.Address, polja.City, polja.State, polja.Country, polja.PostalCode, polja.Phone, polja.Fax, polja.Email, 3); 
       stmt.finalize();
       uspesnost=1;
+      obvestilo="Stranka je bila uspešno registrirana.";
     } catch (err) {
       napaka2 = true;
       uspesnost=0;
+      obvestilo="Prišlo je do napake pri registraciji nove stranke. Prosim preverite vnešene podatke in poskusite znova.";
     }
     
     if (uspesnost==1) {
+
       vrniStranke(function(napaka1, stranke) {
         vrniRacune(function(napaka2, racuni) {
           odgovor.render('prijava', {sporocilo: "Stranka je bila uspešno registrirana.", seznamStrank: stranke, seznamRacunov: racuni});  
         }) 
       });
+
     }
     else {
+
       vrniStranke(function(napaka1, stranke) {
         vrniRacune(function(napaka2, racuni) {
           odgovor.render('prijava', {sporocilo: "Prišlo je do napake pri registraciji nove stranke. Prosim preverite vnešene podatke in poskusite znova.", seznamStrank: stranke, seznamRacunov: racuni});  
         }) 
       });
+
     }
+    //odgovor.redirect('/prijava');
     odgovor.end(); 
   });
 })
