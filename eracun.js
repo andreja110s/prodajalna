@@ -250,7 +250,6 @@ streznik.get('/prijava', function(zahteva, odgovor) {
 // Prikaz nakupovalne košarice za stranko
 streznik.post('/stranka', function(zahteva, odgovor) {
   var form = new formidable.IncomingForm();
-  
   form.parse(zahteva, function (napaka1, polja, datoteke) {
     odgovor.redirect('/')
   });
@@ -258,7 +257,7 @@ streznik.post('/stranka', function(zahteva, odgovor) {
 
 // Odjava stranke
 streznik.post('/odjava', function(zahteva, odgovor) {
-    odgovor.redirect('/prijava') 
+    odgovor.redirect('/prijava')
 })
 
 
