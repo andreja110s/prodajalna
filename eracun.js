@@ -45,8 +45,13 @@ function davcnaStopnja(izvajalec, zanr) {
   }
 }
 
+var jeprijavljen=false;
+
 // Prikaz seznama pesmi na strani
 streznik.get('/', function(zahteva, odgovor) {
+  if (!zahteva.session.jeprijavljen) {
+    odgovor.redirect('/prijava');
+  }
   pb.all("SELECT Track.TrackId AS id, Track.Name AS pesem, \
           Artist.Name AS izvajalec, Track.UnitPrice * " +
           razmerje_usd_eur + " AS cena, \
@@ -250,6 +255,7 @@ streznik.get('/prijava', function(zahteva, odgovor) {
 // Prikaz nakupovalne košarice za stranko
 streznik.post('/stranka', function(zahteva, odgovor) {
   var form = new formidable.IncomingForm();
+  zahteva.session.jeprijavljen=true;
   form.parse(zahteva, function (napaka1, polja, datoteke) {
     odgovor.redirect('/')
   });
@@ -257,7 +263,8 @@ streznik.post('/stranka', function(zahteva, odgovor) {
 
 // Odjava stranke
 streznik.post('/odjava', function(zahteva, odgovor) {
-    odgovor.redirect('/prijava')
+    zahteva.session.jeprijavljen=false;
+    odgovor.redirect('/prijava');
 })
 
 
