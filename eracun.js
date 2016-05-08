@@ -110,7 +110,7 @@ var pesmiIzKosarice = function(zahteva, callback) {                             
         for (var i=0; i<vrstice.length; i++) {
           vrstice[i].stopnja = davcnaStopnja((vrstice[i].opisArtikla.split(' (')[1]).split(')')[0], vrstice[i].zanr);
         }
-        callback(napaka, vrstice);
+        callback(vrstice);
       }
     })
   }
@@ -140,6 +140,9 @@ var pesmiIzRacuna = function(racunId, callback) {
     function(napaka, vrstice) {
       console.log(vrstice);
       if (!napaka) {
+        for (var i=0; i<vrstice.length; i++) {
+          vrstice[i].stopnja = davcnaStopnja((vrstice[i].opisArtikla.split(' (')[1]).split(')')[0], vrstice[i].zanr);
+        }
         callback(vrstice);
       }
       else {
@@ -152,6 +155,21 @@ var pesmiIzRacuna = function(racunId, callback) {
 var strankaIzRacuna = function(racunId, callback) {
     pb.all("SELECT Customer.* FROM Customer, Invoice \
             WHERE Customer.CustomerId = Invoice.CustomerId AND Invoice.InvoiceId = " + racunId,
+    function(napaka, vrstice) {
+      console.log(vrstice);
+      if (!napaka) {
+        callback(vrstice);
+      }
+      else {
+        callback(false);
+      }
+    })
+}
+
+// Vrni podrobnosti o trenutni stranki
+var strankaTrenutna = function(racunId, callback) {
+    pb.all("SELECT Customer.* FROM Customer, Invoice \
+            WHERE Customer.CustomerId= " + racunId,
     function(napaka, vrstice) {
       console.log(vrstice);
       if (!napaka) {
@@ -190,11 +208,14 @@ streznik.get('/izpisiRacun/:oblika', function(zahteva, odgovor) {
       odgovor.send("<p>V košarici nimate nobene pesmi, \
         zato računa ni mogoče pripraviti!</p>");
     } else {
-      odgovor.setHeader('content-type', 'text/xml');
-      odgovor.render('eslog', {
-        vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
-        postavkeRacuna: pesmi
-      })  
+      strankaTrenutna(zahteva.session.IDStranke, function(napaka, stranka) {
+        odgovor.setHeader('content-type', 'text/xml');
+        odgovor.render('eslog2', {
+          vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
+          postavkeRacuna: pesmi,
+          podatkiStranke: stranka
+        })
+      })
     }
   })
 })
