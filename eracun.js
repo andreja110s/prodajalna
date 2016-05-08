@@ -28,7 +28,7 @@ streznik.use(
 
 var razmerje_usd_eur = 0.877039116;
 
-function davcnaStopnja(izvajalec, zanr) {
+function davcnaStopnja(izvajalec, zanr) {                                                                                                                           //davcna stopnja
   switch (izvajalec) {
     case "Queen": case "Led Zepplin": case "Kiss":
       return 0;
@@ -85,7 +85,7 @@ streznik.get('/kosarica/:idPesmi', function(zahteva, odgovor) {
 });
 
 // Vrni podrobnosti pesmi v košarici iz podatkovne baze
-var pesmiIzKosarice = function(zahteva, callback) {
+var pesmiIzKosarice = function(zahteva, callback) {                                                                                                         //uredi da ne bo nan
   if (!zahteva.session.kosarica || Object.keys(zahteva.session.kosarica).length == 0) {
     callback([]);
   } else {
@@ -105,7 +105,7 @@ var pesmiIzKosarice = function(zahteva, callback) {
         for (var i=0; i<vrstice.length; i++) {
           vrstice[i].stopnja = davcnaStopnja((vrstice[i].opisArtikla.split(' (')[1]).split(')')[0], vrstice[i].zanr);
         }
-        callback(vrstice);
+        callback(napaka, vrstice);
       }
     })
   }
@@ -134,6 +134,12 @@ var pesmiIzRacuna = function(racunId, callback) {
     WHERE InvoiceLine.InvoiceId = Invoice.InvoiceId AND Invoice.InvoiceId = " + racunId + ")",
     function(napaka, vrstice) {
       console.log(vrstice);
+      if (!napaka) {
+        callback(vrstice);
+      }
+      else {
+        callback(false);
+      }
     })
 }
 
@@ -143,12 +149,31 @@ var strankaIzRacuna = function(racunId, callback) {
             WHERE Customer.CustomerId = Invoice.CustomerId AND Invoice.InvoiceId = " + racunId,
     function(napaka, vrstice) {
       console.log(vrstice);
+      if (!napaka) {
+        callback(vrstice);
+      }
+      else {
+        callback(false);
+      }
     })
 }
 
 // Izpis računa v HTML predstavitvi na podlagi podatkov iz baze
-streznik.post('/izpisiRacunBaza', function(zahteva, odgovor) {
-  odgovor.end();
+streznik.post('/izpisiRacunBaza', function(zahteva, odgovor) {                                                                                                        //delaj tukaj
+  //odgovor.end();
+  var form= new formidable.IncomingForm();
+  form.parse(zahteva, function(napaka1, polja, datoteke) {
+    strankaIzRacuna(parseInt(polja.seznamRacunov), function(stranka) {
+      pesmiIzRacuna(parseInt(polja.seznamRacunov), function(pesmi) {
+        odgovor.setHeader('content-type', 'text/xml');
+        odgovor.render('eslog', {
+          podatkiStranke: stranka,
+          postavkeRacuna: pesmi,
+          vizualiziraj: true
+        });
+      })
+    })
+  })
 })
 
 // Izpis računa v HTML predstavitvi ali izvorni XML obliki
