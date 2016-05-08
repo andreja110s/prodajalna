@@ -201,6 +201,7 @@ streznik.post('/prijava', function(zahteva, odgovor) {
   
   form.parse(zahteva, function (napaka1, polja, datoteke) {
     var napaka2 = false;
+    var uspesnost=1;
     try {
       var stmt = pb.prepare("\
         INSERT INTO Customer \
@@ -209,13 +210,31 @@ streznik.post('/prijava', function(zahteva, odgovor) {
     	  Phone, Fax, Email, SupportRepId) \
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
       //TODO: add fields and finalize
-      //stmt.run("", "", "", "", "", "", "", "", "", "", "", 3); 
-      //stmt.finalize();
+      stmt.run(polja.FirstName, polja.LastName, polja.Company, polja.Address, polja.City, polja.State, polja.Country, polja.PostalCode, polja.Phone, polja.Fax, polja.Email, 3); 
+      stmt.finalize();
+      uspesnost=1;
     } catch (err) {
       napaka2 = true;
+      uspesnost=0;
     }
-  
-    odgovor.end();
+    
+    if (uspesnost==1) {
+      vrniStranke(function(napaka1, stranke) {
+        vrniRacune(function(napaka2, racuni) {
+          odgovor.render('prijava', {sporocilo: "Stranka je bila uspešno registrirana.", seznamStrank: stranke, seznamRacunov: racuni});
+          odgovor.end();
+        }) 
+      });
+    }
+    else {
+      vrniStranke(function(napaka1, stranke) {
+        vrniRacune(function(napaka2, racuni) {
+          odgovor.render('prijava', {sporocilo: "Prišlo je do napake pri registraciji nove stranke. Prosim preverite vnešene podatke in poskusite znova.", seznamStrank: stranke, seznamRacunov: racuni});
+          odgovor.end();
+        }) 
+      });
+    }
+    //odgovor.end();
   });
 })
 
@@ -231,7 +250,6 @@ streznik.get('/prijava', function(zahteva, odgovor) {
 // Prikaz nakupovalne košarice za stranko
 streznik.post('/stranka', function(zahteva, odgovor) {
   var form = new formidable.IncomingForm();
-  
   form.parse(zahteva, function (napaka1, polja, datoteke) {
     odgovor.redirect('/')
   });
@@ -239,7 +257,7 @@ streznik.post('/stranka', function(zahteva, odgovor) {
 
 // Odjava stranke
 streznik.post('/odjava', function(zahteva, odgovor) {
-    odgovor.redirect('/prijava') 
+    odgovor.redirect('/prijava')
 })
 
 
